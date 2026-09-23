@@ -16,7 +16,7 @@ bazel_dep(name = "llvm", version = "0.7.7", dev_dependency = True)
 toolchains = use_extension("@rules_rs//rs/toolchains:module_extension.bzl", "toolchains")
 toolchains.toolchain(
     edition = "2024",
-    version = "1.92.0",
+    version = "1.97.0",
 )
 use_repo(toolchains, "default_rust_toolchains")
 
