@@ -9,16 +9,42 @@ bazel_dep(name = "bazel_features", version = "1.50.0")
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "rules_cc", version = "0.2.17")
-bazel_dep(name = "rules_rust", version = "0.74.0")
+# bazel_dep(name = "rules_rust", version = "0.74.0")
+bazel_dep(name = "rules_rs", version = "0.0.111")
+bazel_dep(name = "llvm", version = "0.7.7", dev_dependency = True)
 
-rust = use_extension("@rules_rust//rust:extensions.bzl", "rust", dev_dependency = True)
-rust.toolchain(versions = ["1.98.1"])
-use_repo(rust, "rust_toolchains")
+toolchains = use_extension("@rules_rs//rs/toolchains:module_extension.bzl", "toolchains")
+toolchains.toolchain(
+    edition = "2024",
+    version = "1.92.0",
+)
+use_repo(toolchains, "default_rust_toolchains")
+
+rules_rust = use_extension("@rules_rs//rs:rules_rust.bzl", "rules_rust")
+use_repo(rules_rust, "rules_rust")
 
 register_toolchains(
-    "@rust_toolchains//:all",
-    dev_dependency = True,
+    "@default_rust_toolchains//...",
+    "@llvm//toolchain:all",
+    dev_dependency = True
 )
 
-crate_repositories = use_extension("//tools/bazel:extension.bzl", "crate_repositories")
-use_repo(crate_repositories, "crates.io", "vendor")
+crate = use_extension("@rules_rs//rs:extensions.bzl", "crate")
+crate.from_cargo(
+    name = "crates.io",
+    cargo_lock = "//:Cargo.lock",
+    cargo_toml = "//:Cargo.toml",
+    platform_triples = [
+        "aarch64-apple-darwin",
+        "aarch64-pc-windows-msvc",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "x86_64-pc-windows-msvc",
+        "x86_64-unknown-linux-gnu",
+    ],
+)
+
+use_repo(crate, "crates.io")
+
+# crate_repositories = use_extension("//tools/bazel:extension.bzl", "crate_repositories")
+# use_repo(crate_repositories, "crates.io", "vendor")
